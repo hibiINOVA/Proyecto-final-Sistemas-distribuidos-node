@@ -13,32 +13,68 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Middleware = void 0;
-const Jws_1 = require("../tools/Jws");
-const crypto_1 = __importDefault(require("crypto"));
-const console_1 = require("console");
-const simpleAuth = crypto_1.default.createHash('md5').update('aqui va tu contraseña').digest('hex');
-(0, console_1.log)(simpleAuth);
-const Middleware = (typeAuth) => {
-    return (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        //respuesta de error estandar
-        const error_res = { error: true, msg: 'no token' };
-        try {
-            const headers = req.headers;
-            if (typeAuth === 0) {
-                // autenticación simple que se basa en md5
-                //comparamos el header simple con el md5 definido, si no coinciden manda error 401
-                if (headers['simple'] !== simpleAuth)
-                    return res.status(401).json(error_res);
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const AuthService_1 = require("../../app/services/AuthService");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+class Middleware {
+    static validarToken(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+                if (!token) {
+                    return res.status(401).json({
+                        error: true,
+                        msg: "Token requerido."
+                    });
+                }
+                const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || "default_secret");
+                req.userId = decoded;
+                next();
             }
-            else {
-                if (!headers['authorization'] || !(yield Jws_1.Jwt.check(headers['authorization'])))
-                    return res.status(401).json(error_res);
+            catch (err) {
+                return res.status(403).json({
+                    error: true,
+                    msg: "Token inválido o expirado."
+                });
             }
-            next();
-        }
-        catch (error) {
-            return res.status(500).json(error_res);
-        }
-    });
-};
+        });
+    }
+    static validarLogin(req, res, next) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { email, password } = req.body;
+                if (!email || !password) {
+                    return res.status(400).json({
+                        error: true,
+                        msg: "Faltan datos: email o password."
+                    });
+                }
+                const user = yield AuthService_1.AuthService.getUserByEmail(email);
+                if (!user) {
+                    return res.status(404).json({
+                        error: true,
+                        msg: "Usuario no encontrado."
+                    });
+                }
+                const coincide = yield bcrypt_1.default.compare(password, user.password);
+                if (!coincide) {
+                    return res.status(401).json({
+                        error: true,
+                        msg: "Contraseña incorrecta."
+                    });
+                }
+                req.body.user = user;
+                next();
+            }
+            catch (err) {
+                console.error("Error en middleware:", err);
+                return res.status(500).json({
+                    error: true,
+                    msg: "Error interno en middleware."
+                });
+            }
+        });
+    }
+}
 exports.Middleware = Middleware;

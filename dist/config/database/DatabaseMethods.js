@@ -12,16 +12,68 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DatabaseMethods = void 0;
 const DatabaseConection_1 = require("./DatabaseConection");
 class DatabaseMethods {
+    static query_one(sql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let connection;
+            try {
+                connection = yield (0, DatabaseConection_1.connect)();
+                const [rows] = yield connection.execute(sql.query, sql.params);
+                const result = rows[0] || null;
+                return { error: false, msg: result };
+            }
+            catch (error) {
+                return { error: true, msg: 'error_query_one' };
+            }
+            finally {
+                if (connection)
+                    connection.end();
+            }
+        });
+    }
+    static query(sql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let connection;
+            try {
+                connection = yield (0, DatabaseConection_1.connect)();
+                const [rows] = yield connection.execute(sql.query, sql.params);
+                return { error: false, msg: rows };
+            }
+            catch (error) {
+                return { error: true, msg: 'error_query' };
+            }
+            finally {
+                if (connection)
+                    connection.end();
+            }
+        });
+    }
+    static query_with_named_params(sql) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let connection;
+            try {
+                connection = yield (0, DatabaseConection_1.connect)();
+                const [rows] = yield connection.execute(sql.query, sql.params);
+                return { error: false, msg: rows };
+            }
+            catch (error) {
+                return { error: true, msg: 'error_query' };
+            }
+            finally {
+                if (connection)
+                    connection.end();
+            }
+        });
+    }
     static save(sql) {
         return __awaiter(this, void 0, void 0, function* () {
             let connection;
             try {
                 connection = yield (0, DatabaseConection_1.connect)();
                 yield connection.execute(sql.query, sql.params);
-                return { error: false, message: 'query executed successfully' };
+                return { error: false, msg: 'query_executed' };
             }
             catch (error) {
-                return { error: true, message: 'error save query' };
+                return { error: true, msg: 'error_save' };
             }
             finally {
                 if (connection)
@@ -39,7 +91,7 @@ class DatabaseMethods {
                     yield connection.execute(sql.query, sql.params);
                 }
                 yield connection.commit();
-                return { error: false, msg: 'queries_excuted' };
+                return { error: false, msg: 'queries_executed' };
             }
             catch (error) {
                 if (connection)
