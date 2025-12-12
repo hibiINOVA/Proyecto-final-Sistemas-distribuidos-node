@@ -54,8 +54,10 @@ Asegúrate de que la tabla `usuarios` exista y tenga la siguiente estructura (de
 | `activo` | `BOOLEAN` | DEFAULT TRUE |
 
 script:
-CREATE TABLE usuarios (
+
+    CREATE TABLE usuarios (
     -- Clave primaria, CHAR(36) para almacenar UUIDs
+
     id CHAR(36) PRIMARY KEY,
     
     -- Información personal
@@ -75,7 +77,7 @@ CREATE TABLE usuarios (
     
     -- Estado de la cuenta
     activo BOOLEAN DEFAULT TRUE
-);
+    );
 
 ### 3\. Instalación de Dependencias
 
